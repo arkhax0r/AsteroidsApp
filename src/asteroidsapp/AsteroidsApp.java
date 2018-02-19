@@ -9,6 +9,8 @@ import java.awt.image.BufferedImage;
 import java.awt.image.PixelGrabber;
 import java.io.File;
 import java.io.IOException;
+import static java.lang.System.exit;
+import static java.lang.System.out;
 import javafx.animation.AnimationTimer;
 import javafx.application.Application;
 import javafx.geometry.Point2D;
@@ -23,9 +25,12 @@ import javafx.stage.Stage;
 
 import java.util.ArrayList;
 import java.util.List;
+import static javafx.application.Platform.exit;
 import javafx.embed.swing.SwingFXUtils;
 import javafx.geometry.Pos;
+import javafx.scene.Node;
 import javafx.scene.image.Image;
+import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.TilePane;
 import javafx.scene.paint.ImagePattern;
@@ -43,7 +48,7 @@ public class AsteroidsApp extends Application {
     private List<GameObject> bullets = new ArrayList<>();
     private List<GameObject> enemies = new ArrayList<>();
     private List<GameObject> ruter = new ArrayList<>();
-
+    private int scale = 30;
     private GameObject player;
     private StackPane entities;
     private Tile[][] board = new Tile[29][29];
@@ -92,16 +97,16 @@ public class AsteroidsApp extends Application {
         Image[] sprites = new Image[antall];
         Image sprite;
         int z = 0;
-        System.out.println("height: "+source.getHeight());
-        System.out.println("width: "+source.getWidth());
+        //System.out.println("height: "+source.getHeight());
+        //System.out.println("width: "+source.getWidth());
         for (int y = 0; y < source.getHeight()-32; y += 32) {
             
             for (int x = 0; x < source.getWidth(); x += 32) {
               
-                System.out.println("x: "+x+" y: "+y);
+                //System.out.println("x: "+x+" y: "+y);
                
                     sprites[z] = SwingFXUtils.toFXImage(source.getSubimage(x, y, 32, 32), null);
-                    System.out.println("count: "+z);
+                    //System.out.println("count: "+z);
                     z++;
               
             
@@ -150,7 +155,7 @@ public class AsteroidsApp extends Application {
         
         root.setStyle("-fx-background-color: red");
         TilePane grid = new TilePane(); 
-        Rectangle[][] test = new Rectangle[30][30];
+        Rectangle[][] test = new Rectangle[scale][scale];
         int count=0;
         BufferedImage testbilde = null;
         Image image = null;
@@ -158,9 +163,9 @@ public class AsteroidsApp extends Application {
         //bakgrunn
         for(int i=0; i<test.length;i++){
            for(int j=0; j < test.length; j++){
-               Rectangle tile = new Rectangle(30,30);
-                tile.setX(j * 30);
-                tile.setY(i * 30);
+               Rectangle tile = new Rectangle(scale,scale);
+                tile.setX(j * scale);
+                tile.setY(i * scale);
                 tile.setFill(new ImagePattern(bilder[81]));
                 root.getChildren().add(tile);
            }
@@ -177,7 +182,7 @@ public class AsteroidsApp extends Application {
                
                 Rute tile = new Rute();
                
-                tile.GameTile(image, 30, 30);
+                tile.GameTile(image, scale, scale);
                 tile.setId( gbValue );
 //                tile.setX(j * 30);
 //                tile.setY(i * 30);
@@ -185,20 +190,25 @@ public class AsteroidsApp extends Application {
 
                 //tile.setFill(new ImagePattern(image));
                 test[i][j] = tile.getTile();
-                System.out.println("id: "+tile.getId());
-                addTile(tile, j*30, i*30);
+                //System.out.println("id: "+tile.getId());
+                addTile(tile, j*scale, i*scale);
                 //root.getChildren().add(tile.getTile());
-                count++;  
+                count++; 
+                
            }     
         }   
         player = new Player();
         player.setVelocity(new Point2D(1, 0));
+        player.setPlayer();
+        
+        
         addGameObject(player, 300, 300);
 
         AnimationTimer timer = new AnimationTimer() {
             @Override
             public void handle(long now) {
                 onUpdate();
+                
             }
         };
         timer.start();
@@ -212,8 +222,8 @@ public class AsteroidsApp extends Application {
     }
     private void addTile(GameObject rute, double x, double y) {
         ruter.add(rute);
-        rute.getView().setTranslateX(x-30);
-        rute.getView().setTranslateY(y-30);
+        rute.getView().setTranslateX(x);
+        rute.getView().setTranslateY(y);
         root.getChildren().add(rute.getView());
     }
 
@@ -241,17 +251,56 @@ public class AsteroidsApp extends Application {
         }
         for (GameObject rute : ruter) {
             int id = rute.getId();
-            System.out.println(id);
-           if(id == 230){
-                if (rute.isColliding(player)) {
-                    player.setVelocity( new Point2D(-player.getVelocity().getX() , -player.getVelocity().getY()));
-                    
+        
+            player.lastView();
+            Node last = player.getLastView();
+            double lastx = player.getLastView().getTranslateX()+1;
+            double lasty = player.getLastView().getTranslateY();
+            //System.out.println(id);
+           if(id == 230 && player.isColliding(rute) ){
+               
+                    System.out.println("collision");
+                    player.setVelocity( new Point2D( 0, 0 )  );
+                
+                    rute.setCollision();
+                    player.setCollision();
+                  
                     break;
+//                    double playerx = player.getView().getBoundsInParent().getMinX();
+//                    double rutex = rute.getView().getBoundsInParent().getMinX();
+//                    double rutexmax = rute.getView().getBoundsInParent().getMaxX();
+//                    double playery = player.getView().getBoundsInParent().getMinY();
+//                    double rutey = rute.getView().getBoundsInParent().getMinY();
+////                    System.out.println("collision!: "+rutex);
+////                    exit();
+//                    System.out.println("playerx: "+playerx+"  rutex: "+rutex);
+//                    System.out.println("playery: "+playery+"  rutey: "+rutey);
+//                    //System.out.println(player.getVelocity().getX());
+//                    //negativ x-retning
+//                    if( rutex < playerx && rutex == 0.0 ){
+//                        player.setVelocity( new Point2D( 0, player.getVelocity().getY() )  );
+//                        player.getView().setTranslateX( rute.getTile().getX() + scale + 1 );
+//                    }
+//                    if( playerx > rutex && rutexmax == 900 ){
+//                        player.setVelocity( new Point2D( 0, player.getVelocity().getY()) );
+//                        //player.getView().setTranslateX( 839 );
+//                        
+//                    }
+                    //negativ x-retning
+//                    if( rutex < playerx){
+//                        player.getView().setTranslateY(rutey+31);
+//                    }
+                    
+                    
+                    //player.getView().setLayoutY(80);
+                    //break;
                     //root.getChildren().removeAll(bullet.getView(), enemy.getView());
                 
-            }
+            
            }
+           
         }
+        
         bullets.removeIf(GameObject::isDead);
         enemies.removeIf(GameObject::isDead);
         
@@ -260,14 +309,12 @@ public class AsteroidsApp extends Application {
 
         player.update();
 
-        if (Math.random() < 0.02) {
-            addEnemy(new Enemy(), Math.random() * root.getPrefWidth(), Math.random() * root.getPrefHeight());
-        }
+     
     }
 
     private static class Player extends GameObject {
         Player() {
-            super(new Rectangle(40, 20, Color.BLUE));
+            super(new Rectangle(30, 30, Color.BLUE));
         }
     }
 
@@ -293,18 +340,25 @@ public class AsteroidsApp extends Application {
     public void start(Stage stage) throws Exception {
         stage.setScene(new Scene(createContent()));
         stage.getScene().setOnKeyPressed(e -> {
-            if (e.getCode() == KeyCode.LEFT) {
-                player.rotateLeft();
-            } else if (e.getCode() == KeyCode.RIGHT) {
-                player.rotateRight();
-            } else if (e.getCode() == KeyCode.SPACE) {
-                Bullet bullet = new Bullet();
-                bullet.setVelocity(player.getVelocity().normalize().multiply(5));
-                addBullet(bullet, player.getView().getTranslateX(), player.getView().getTranslateY());
-            }
+            keyPressed(e);
         });
         stage.show();
     }
+    public void keyPressed(KeyEvent arg0) {
+
+    if (arg0.getCode() == KeyCode.RIGHT )
+        {
+            player.setCollision();
+            player.moveRight();
+            
+        }
+    if (arg0.getCode() == KeyCode.LEFT )
+        {
+            player.getGameObject().s
+            player.moveLeft();
+            
+        }
+}
      private class Tile extends StackPane {
         private Text text = new Text();
 
@@ -317,7 +371,6 @@ public class AsteroidsApp extends Application {
 
             setAlignment(Pos.CENTER);
             getChildren().addAll(border, text);
-
 
         }
    }
